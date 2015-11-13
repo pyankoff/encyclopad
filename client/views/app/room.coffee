@@ -1,11 +1,7 @@
-isSubscribed = (_id) ->
-	return ChatSubscription.find({ rid: _id }).count() > 0
-
 favoritesEnabled = ->
 	return !RocketChat.settings.get 'Disable_Favorite_Rooms'
 
 
-# @TODO bug com o botão para "rolar até o fim" (novas mensagens) quando há uma mensagem com texto que gere rolagem horizontal
 Template.room.helpers
 	showFormattingTips: ->
 		return RocketChat.settings.get('Message_ShowFormattingTips') and (RocketChat.Markdown or RocketChat.Highlight)
@@ -14,61 +10,25 @@ Template.room.helpers
 	showHighlight: ->
 		return RocketChat.Highlight
 	favorite: ->
-		sub = ChatSubscription.findOne { rid: this._id }, { fields: { f: 1 } }
+		sub = ChatSubscription.findOne { name: Session.get('recipe') }, { fields: { f: 1 } }
 		return 'icon-star favorite-room' if sub?.f? and sub.f and favoritesEnabled
 		return 'icon-star-empty'
 
-	subscribed: ->
-		return isSubscribed(this._id)
-
 	messagesHistory: ->
-		return ChatMessage.find { rid: this._id, t: { '$ne': 't' }  }, { sort: { ts: 1 } }
+		recipe = Session.get('recipe')
+		return ChatMessage.find { tags: recipe, t: { '$ne': 't' }  }, { sort: { ts: 1 } }
 
 	hasMore: ->
-		return RoomHistoryManager.hasMore this._id
+		return RoomHistoryManager.hasMore Session.get('recipe')
 
 	isLoading: ->
-		return RoomHistoryManager.isLoading this._id
+		return RoomHistoryManager.isLoading Session.get('recipe')
 
 	windowId: ->
 		return "chat-window-#{this._id}"
 
 	uploading: ->
 		return Session.get 'uploading'
-
-	usersTyping: ->
-		users = MsgTyping.get @_id
-		if users.length is 0
-			return
-		if users.length is 1
-			return {
-				multi: false
-				selfTyping: MsgTyping.selfTyping.get()
-				users: users[0]
-			}
-
-		# usernames = _.map messages, (message) -> return message.u.username
-
-		last = users.pop()
-		if users.length > 4
-			last = t('others')
-		# else
-		usernames = users.join(', ')
-		usernames = [usernames, last]
-		return {
-			multi: true
-			selfTyping: MsgTyping.selfTyping.get()
-			users: usernames.join " #{t 'and'} "
-		}
-
-	roomName: ->
-		roomData = Session.get('roomData' + this._id)
-		return '' unless roomData
-
-		if roomData.t is 'd'
-			return ChatSubscription.findOne({ rid: this._id }, { fields: { name: 1 } })?.name
-		else
-			return roomData.name
 
 	roomIcon: ->
 		roomData = Session.get('roomData' + this._id)
@@ -78,18 +38,6 @@ Template.room.helpers
 			when 'd' then return 'icon-at'
 			when 'c' then return 'icon-hash'
 			when 'p' then return 'icon-lock'
-
-	userStatus: ->
-		roomData = Session.get('roomData' + this._id)
-
-		return {} unless roomData
-
-		if roomData.t is 'd'
-			username = _.without roomData.usernames, Meteor.user().username
-			return Session.get('user_' + username + '_status') || 'offline'
-
-		else
-			return 'offline'
 
 	autocompleteSettingsRoomSearch: ->
 		return {
@@ -122,30 +70,8 @@ Template.room.helpers
 		else
 			return ''
 
-	canDirectMessage: ->
-		return Meteor.user()?.username isnt this.username
-
-	roomNameEdit: ->
-		return Session.get('roomData' + this._id)?.name
-
-	editingTitle: ->
-		return 'hidden' if Session.get('editRoomTitle')
-
-	showEditingTitle: ->
-		return 'hidden' if not Session.get('editRoomTitle')
-
-	flexOpened: ->
-		return 'opened' if RocketChat.TabBar.isFlexOpen()
-
 	arrowPosition: ->
 		return 'left' unless RocketChat.TabBar.isFlexOpen()
-
-	phoneNumber: ->
-		return '' unless this.phoneNumber
-		if this.phoneNumber.length > 10
-			return "(#{this.phoneNumber.substr(0,2)}) #{this.phoneNumber.substr(2,5)}-#{this.phoneNumber.substr(7)}"
-		else
-			return "(#{this.phoneNumber.substr(0,2)}) #{this.phoneNumber.substr(2,4)}-#{this.phoneNumber.substr(6)}"
 
 	userActiveByUsername: (username) ->
 		status = Session.get 'user_' + username + '_status'
@@ -173,13 +99,6 @@ Template.room.helpers
 		if @utcOffset?
 			return "UTC #{@utcOffset}"
 
-	phoneNumber: ->
-		return '' unless @phoneNumber
-		if @phoneNumber.length > 10
-			return "(#{@phoneNumber.substr(0,2)}) #{@phoneNumber.substr(2,5)}-#{@phoneNumber.substr(7)}"
-		else
-			return "(#{@phoneNumber.substr(0,2)}) #{@phoneNumber.substr(2,4)}-#{@phoneNumber.substr(6)}"
-
 	lastLogin: ->
 		if @lastLogin
 			return moment(@lastLogin).format('LLL')
@@ -187,18 +106,13 @@ Template.room.helpers
 	canJoin: ->
 		return !! ChatRoom.findOne { _id: @_id, t: 'c' }
 
-	canRecordAudio: ->
-		wavRegex = /audio\/wav|audio\/\*/i
-		wavEnabled = RocketChat.settings.get("FileUpload_MediaTypeWhiteList").match(wavRegex)
-		return RocketChat.settings.get('Message_AudioRecorderEnabled') and (navigator.getUserMedia? or navigator.webkitGetUserMedia?) and wavEnabled and RocketChat.settings.get('FileUpload_Enabled')
-
 	unreadSince: ->
 		room = ChatRoom.findOne(this._id, { reactive: false })
 		if room?
 			return RoomManager.openedRooms[room.t + room.name]?.unreadSince?.get()
 
 	unreadCount: ->
-		return RoomHistoryManager.getRoom(@_id).unreadNotLoaded.get() + Template.instance().unreadCount.get()
+		return RoomHistoryManager.getRoom(Session.get('recipe')).unreadNotLoaded.get() + Template.instance().unreadCount.get()
 
 	formatUnreadSince: ->
 		room = ChatRoom.findOne(this._id, { reactive: false })
@@ -323,7 +237,8 @@ Template.room.events
 			fileUpload files
 
 	'keydown .input-message': (event) ->
-		Template.instance().chatMessages.keydown(@_id, event, Template.instance())
+		recipe = Session.get('recipe')
+		Template.instance().chatMessages.keydown(recipe, event, Template.instance())
 
 	'click .message-form .icon-paper-plane': (event) ->
 		input = $(event.currentTarget).siblings("textarea")
@@ -333,23 +248,13 @@ Template.room.events
 		input.focus()
 		input.get(0).updateAutogrow()
 
-	'click .edit-room-title': (event) ->
-		event.preventDefault()
-		Session.set('editRoomTitle', true)
-		$(".fixed-title").addClass "visible"
-		Meteor.setTimeout ->
-			$('#room-title-field').focus().select()
-		, 10
-
-	'keydown #room-title-field': (event) ->
+	'keydown #recipe-field': (event) ->
 		if event.keyCode is 27 # esc
 			Session.set('editRoomTitle', false)
 		else if event.keyCode is 13 # enter
-			renameRoom @_id, $(event.currentTarget).val()
+			Session.set('recipe', $(event.currentTarget).val())
 
-	'blur #room-title-field': (event) ->
-		# TUDO: create a configuration to select the desired behaviour
-		# renameRoom this._id, $(event.currentTarget).val()
+	'blur #recipe-field': (event) ->
 		Session.set('editRoomTitle', false)
 		$(".fixed-title").removeClass "visible"
 
@@ -367,13 +272,13 @@ Template.room.events
 		RocketChat.TabBar.setTemplate 'membersList'
 
 	'scroll .wrapper': _.throttle (e, instance) ->
-		if RoomHistoryManager.hasMore(@_id) is true and RoomHistoryManager.isLoading(@_id) is false
+		if RoomHistoryManager.hasMore(Session.get('recipe')) is true and RoomHistoryManager.isLoading(Session.get('recipe')) is false
 			if e.target.scrollTop is 0
-				RoomHistoryManager.getMore(@_id)
+				RoomHistoryManager.getMore(Session.get('recipe'))
 	, 200
 
 	'click .load-more > a': ->
-		RoomHistoryManager.getMore(@_id)
+		RoomHistoryManager.getMore(Session.get('recipe'))
 
 	'click .new-message': (e) ->
 		Template.instance().atBottom = true
@@ -455,22 +360,6 @@ Template.room.events
 
 		fileUpload filesToUpload
 
-	'click .message-form .mic': (e, t) ->
-		AudioRecorder.start ->
-			t.$('.stop-mic').removeClass('hidden')
-			t.$('.mic').addClass('hidden')
-
-	'click .message-form .stop-mic': (e, t) ->
-		AudioRecorder.stop (blob) ->
-			fileUpload [{
-				file: blob
-				type: 'audio'
-				name: 'Audio record'
-			}]
-
-		t.$('.stop-mic').addClass('hidden')
-		t.$('.mic').removeClass('hidden')
-
 	'click .deactivate': ->
 		username = Session.get('showUserInfo')
 		user = Meteor.users.findOne { username: String(username) }
@@ -505,6 +394,8 @@ Template.room.onCreated ->
 	@autorun ->
 		self.subscribe 'fullUserData', Session.get('showUserInfo'), 1
 
+	Session.set('recipe', FlowRouter.getParam('name'))
+
 	for button in RocketChat.MessageAction.getButtons()
 		if _.isFunction button.action
 			evt = {}
@@ -513,8 +404,6 @@ Template.room.onCreated ->
 
 
 Template.room.onDestroyed ->
-	RocketChat.TabBar.resetButtons()
-
 	window.removeEventListener 'resize', this.onWindowResize
 
 
@@ -606,55 +495,11 @@ Template.room.onRendered ->
 		if firstMessageOnScreen?.id?
 			firstMessage = ChatMessage.findOne firstMessageOnScreen.id
 			if firstMessage?
-				subscription = ChatSubscription.findOne rid: template.data._id
-				template.unreadCount.set ChatMessage.find({rid: template.data._id, ts: {$lt: firstMessage.ts, $gt: subscription.ls}}).count()
+				subscription = ChatSubscription.findOne name: Session.get('recipe')
+				template.unreadCount.set ChatMessage.find({tags: Session.get('recipe'), ts: {$lt: firstMessage.ts, $gt: subscription.ls}}).count()
 			else
 				template.unreadCount.set 0
 	, 300
 
 	# salva a data da renderização para exibir alertas de novas mensagens
 	$.data(this.firstNode, 'renderedAt', new Date)
-
-	webrtc = WebRTC.getInstanceByRoomId template.data._id
-	if webrtc?
-		Tracker.autorun ->
-			if webrtc.remoteItems.get()?.length > 0
-				RocketChat.TabBar.setTemplate 'membersList'
-				RocketChat.TabBar.openFlex()
-
-			if webrtc.localUrl.get()?
-				RocketChat.TabBar.setTemplate 'membersList'
-				RocketChat.TabBar.openFlex()
-
-
-renameRoom = (rid, name) ->
-	name = name?.toLowerCase().trim()
-	console.log 'room renameRoom' if window.rocketDebug
-	room = Session.get('roomData' + rid)
-	if room.name is name
-		Session.set('editRoomTitle', false)
-		return false
-
-	Meteor.call 'saveRoomName', rid, name, (error, result) ->
-		if result
-			Session.set('editRoomTitle', false)
-			# If room was renamed then close current room and send user to the new one
-			RoomManager.close room.t + room.name
-			switch room.t
-				when 'c'
-					FlowRouter.go 'channel', name: name
-				when 'p'
-					FlowRouter.go 'group', name: name
-
-			toastr.success t('Room_name_changed_successfully')
-		if error
-			if error.error is 'name-invalid'
-				toastr.error t('Invalid_room_name', name)
-				return
-			if error.error is 'duplicate-name'
-				if room.t is 'c'
-					toastr.error t('Duplicate_channel_name', name)
-				else
-					toastr.error t('Duplicate_private_group_name', name)
-				return
-			toastr.error error.reason

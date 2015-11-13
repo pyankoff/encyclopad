@@ -3,25 +3,25 @@
 
 	histories = {}
 
-	getRoom = (rid) ->
-		if not histories[rid]?
-			histories[rid] =
+	getRoom = (recipe) ->
+		if not histories[recipe]?
+			histories[recipe] =
 				hasMore: ReactiveVar true
 				isLoading: ReactiveVar false
 				unreadNotLoaded: ReactiveVar 0
 				loaded: 0
 
-		return histories[rid]
+		return histories[recipe]
 
-	getMore = (rid, limit=defaultLimit) ->
-		room = getRoom rid
+	getMore = (recipe, limit=defaultLimit) ->
+		room = getRoom recipe
 		if room.hasMore.curValue isnt true
 			return
 
 		room.isLoading.set true
 
 		# ScrollListener.setLoader true
-		lastMessage = ChatMessage.findOne({rid: rid}, {sort: {ts: 1}})
+		lastMessage = ChatMessage.findOne({tags: recipe}, {sort: {ts: 1}})
 		# lastMessage ?= ChatMessage.findOne({rid: rid}, {sort: {ts: 1}})
 
 		if lastMessage?
@@ -32,15 +32,15 @@
 		ls = undefined
 		typeName = undefined
 
-		subscription = ChatSubscription.findOne rid: rid
+		subscription = ChatSubscription.findOne name: recipe
 		if subscription?
 			ls = subscription.ls
 			typeName = subscription.t + subscription.name
 		else
-			curRoomDoc = ChatRoom.findOne(_id: rid)
+			curRoomDoc = ChatRoom.findOne(name: recipe)
 			typeName = curRoomDoc?.t + curRoomDoc?.name
 
-		Meteor.call 'loadHistory', rid, ts, limit, ls, (err, result) ->
+		Meteor.call 'loadHistory', recipe, ts, limit, ls, (err, result) ->
 			room.unreadNotLoaded.set result?.unreadNotLoaded
 
 			wrapper = $('.messages-box .wrapper').get(0)
@@ -54,7 +54,7 @@
 				wrapper.scrollTop += heightDiff
 
 			Meteor.defer ->
-				readMessage.refreshUnreadMark(rid, true)
+				readMessage.refreshUnreadMark(recipe, true)
 				RoomManager.updateMentionsMarksOfRoom typeName
 
 			room.isLoading.set false
@@ -62,28 +62,28 @@
 			if result?.messages?.length < limit
 				room.hasMore.set false
 
-	hasMore = (rid) ->
-		room = getRoom rid
+	hasMore = (recipe) ->
+		room = getRoom recipe
 
 		return room.hasMore.get()
 
-	getMoreIfIsEmpty = (rid) ->
-		room = getRoom rid
+	getMoreIfIsEmpty = (recipe) ->
+		room = getRoom recipe
 
 		if room.loaded is 0
-			getMore rid
+			getMore recipe
 
-	isLoading = (rid) ->
-		room = getRoom rid
+	isLoading = (recipe) ->
+		room = getRoom recipe
 
 		return room.isLoading.get()
 
-	clear = (rid) ->
-		ChatMessage.remove({ rid: rid })
-		if histories[rid]?
-			histories[rid].hasMore.set true
-			histories[rid].isLoading.set false
-			histories[rid].loaded = 0
+	clear = (recipe) ->
+		ChatMessage.remove({ tags: recipe })
+		if histories[recipe]?
+			histories[recipe].hasMore.set true
+			histories[recipe].isLoading.set false
+			histories[recipe].loaded = 0
 
 	getRoom: getRoom
 	getMore: getMore

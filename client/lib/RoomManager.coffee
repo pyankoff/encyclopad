@@ -1,9 +1,9 @@
-loadMissedMessages = (rid) ->
-	lastMessage = ChatMessage.findOne({rid: rid}, {sort: {ts: -1}, limit: 1})
+loadMissedMessages = (recipe) ->
+	lastMessage = ChatMessage.findOne({tags: recipe}, {sort: {ts: -1}, limit: 1})
 	if not lastMessage?
 		return
 
-	Meteor.call 'loadMissedMessages', rid, lastMessage.ts, (err, result) ->
+	Meteor.call 'loadMissedMessages', recipe, lastMessage.ts, (err, result) ->
 		ChatMessage.upsert {_id: item._id}, item for item in result
 
 connectionWasOnline = true
@@ -100,8 +100,8 @@ RocketChat.Notifications.onUser 'message', (msg) ->
 					if room?
 						openedRooms[typeName].rid = room._id
 
-						RoomHistoryManager.getMoreIfIsEmpty room._id
-						record.ready = RoomHistoryManager.isLoading(room._id) is false
+						RoomHistoryManager.getMoreIfIsEmpty Session.get('recipe')
+						record.ready = RoomHistoryManager.isLoading(Session.get('recipe')) is false
 						Dep.changed()
 
 						msgStream.on openedRooms[typeName].rid, (msg) ->

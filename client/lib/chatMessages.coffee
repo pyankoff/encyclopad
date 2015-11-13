@@ -41,7 +41,7 @@ class @ChatMessages
 
 	edit: (element, index) ->
 		id = element.getAttribute("id")
-		message = ChatMessage.findOne { _id: id } 
+		message = ChatMessage.findOne { _id: id }
 		hasPermission = RocketChat.authz.hasAtLeastOnePermission('edit-message', message.rid)
 		editAllowed = RocketChat.settings.get 'Message_AllowEditing'
 		editOwn = message?.u?._id is Meteor.userId()
@@ -80,23 +80,23 @@ class @ChatMessages
 		else
 			this.editing.saved = this.input.value
 
-	send: (rid, input) ->
+	send: (recipe, input) ->
 		if _.trim(input.value) isnt ''
 			readMessage.enable()
 			readMessage.readNow()
 			$('.message.first-unread').removeClass('first-unread')
 
 			if this.editing.id
-				this.update(this.editing.id, rid, input)
+				this.update(this.editing.id, input)
 				return
 
 			if this.isMessageTooLong(input)
 				return Errors.throw t('Error_message_too_long')
-			KonchatNotification.removeRoomNotification(rid)
+
 			msg = input.value
 			input.value = ''
-			msgObject = { _id: Random.id(), rid: rid, msg: msg}
-			this.stopTyping(rid)
+			tags = recipe.split(' ')
+			msgObject = { _id: Random.id(), tags: tags, msg: msg}
 			#Check if message starts with /command
 			if msg[0] is '/'
 				match = msg.match(/^\/([^\s]+)(?:\s+(.*))?$/m)
@@ -126,21 +126,11 @@ class @ChatMessages
 			if error
 				return Errors.throw error.reason
 
-	update: (id, rid, input) ->
+	update: (id, input) ->
 		if _.trim(input.value) isnt ''
 			msg = input.value
-			Meteor.call 'updateMessage', { _id: id, msg: msg, rid: rid }
+			Meteor.call 'updateMessage', { _id: id, msg: msg }
 			this.clearEditing()
-			this.stopTyping(rid)
-
-	startTyping: (rid, input) ->
-		if _.trim(input.value) isnt ''
-			MsgTyping.start(rid)
-		else
-			MsgTyping.stop(rid)
-
-	stopTyping: (rid) ->
-		MsgTyping.stop(rid)
 
 	bindEvents: ->
 		if this.wrapper?.length
@@ -182,17 +172,14 @@ class @ChatMessages
 		keyCodes.push i for i in [35..40] # Home, End, Arrow Keys
 		keyCodes.push i for i in [112..123] # F1 - F12
 
-		unless k in keyCodes
-			this.startTyping(rid, input)
-
-	keydown: (rid, event) ->
+	keydown: (recipe, event) ->
 		input = event.currentTarget
 		k = event.which
 		this.resize(input)
 		if k is 13 and not event.shiftKey
 			event.preventDefault()
 			event.stopPropagation()
-			this.send(rid, input)
+			this.send(recipe, input)
 			return
 
 		if k is 9

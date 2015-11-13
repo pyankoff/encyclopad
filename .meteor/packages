@@ -34,39 +34,13 @@ standard-minifiers
 tracker
 
 arunoda:streams
-rocketchat:lib
 
-rocketchat:authorization
-rocketchat:autolinker
-rocketchat:colors
-rocketchat:custom-oauth
-rocketchat:emojione
-rocketchat:favico
-rocketchat:file
-rocketchat:github-enterprise
-rocketchat:gitlab
-rocketchat:highlight
-rocketchat:ldap
-rocketchat:logger
-rocketchat:mailer
-rocketchat:markdown
-rocketchat:me
-rocketchat:mentions
-rocketchat:message-star
-rocketchat:oembed
-rocketchat:slashcommands-invite
-rocketchat:slashcommands-join
-rocketchat:slashcommands-leave
-rocketchat:spotify
-rocketchat:statistics
+rocketchat:lib
 rocketchat:theme
-rocketchat:tutum
-rocketchat:webrtc
-rocketchat:wordpress
-#rocketchat:chatops
-#rocketchat:hubot
-#rocketchat:irc
-#rocketchat:livechat
+rocketchat:authorization
+rocketchat:favico
+rocketchat:statistics
+rocketchat:file
 
 konecty:change-case
 konecty:delayed-task
@@ -109,5 +83,3 @@ todda00:friendly-slugs
 underscorestring:underscore.string
 yasaricli:slugify
 yasinuslu:blaze-meta
-# sanjo:jasmine
-# velocity:html-reporter

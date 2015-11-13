@@ -1,4 +1,4 @@
-Meteor.publish 'messages', (rid, start) ->
+Meteor.publish 'messages', (recipe, start) ->
 	unless this.userId
 		return this.ready()
 
@@ -9,10 +9,7 @@ Meteor.publish 'messages', (rid, start) ->
 	if typeof rid isnt 'string'
 		return this.ready()
 
-	if not Meteor.call 'canAccessRoom', rid, this.userId
-		return this.ready()
-
-	cursor = RocketChat.models.Messages.findVisibleByRoomId rid,
+	cursor = RocketChat.models.Messages.findVisibleByRecipe rid,
 		sort:
 			ts: -1
 		limit: 50
@@ -26,7 +23,7 @@ Meteor.publish 'messages', (rid, start) ->
 			record.starred = _.findWhere record.starred, { _id: publication.userId }
 			publication.changed('rocketchat_message', _id, record)
 
-	cursorDelete = RocketChat.models.Messages.findInvisibleByRoomId rid,
+	cursorDelete = RocketChat.models.Messages.findInvisibleByRecipe recipe,
 		fields:
 			_id: 1
 

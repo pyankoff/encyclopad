@@ -9,16 +9,13 @@
 			<header class="fixed-title">
 				{{> burger}}
 				<h2>
-					{{#if showToggleFavorite}}
-						<a href="#favorite" class="toggle-favorite"><i class="{{favorite}}"></i></a>
-					{{/if}}
-					<i class="{{roomIcon}} status-{{userStatus}}"></i>
-					<span class="room-title {{editingTitle}}">{{roomName}}</span>
-					{{#if canEditName}}
-					<input type="text" id="room-title-field" class="{{showEditingTitle}}" value="{{roomNameEdit}}" dir="auto">
-					<a href="#edit" class="edit-room-title"><i class="icon-pencil" aria-label="{{_ "Edit"}}"></i></a>
-					{{/if}}
+					<span class="room-title">Recipe:</span>
+
 				</h2>
+				<input type="text" id="recipe-field" class="" value="{{roomNameEdit}}" dir="auto">
+
+				<a href="#favorite" class="toggle-favorite"><i class="{{favorite}}"></i></a>
+
 			</header>
 			<div class="container-bars">
 				{{#each uploading}}
@@ -64,7 +61,7 @@
 							</li>
 						{{else}}
 							<li class="start">
-								{{_ "Start_of_conversation"}}
+								Nothing here. Write more...
 							</li>
 						{{/if}}
 						{{#each messagesHistory}}
@@ -78,7 +75,6 @@
 				</div>
 			</div>
 			<footer class="footer">
-				{{#if subscribed}}
 					<form class="message-form" method="post" action="/">
 						<div style="display: flex">
 							<div class="file">
@@ -89,15 +85,6 @@
 								{{> messagePopupConfig getPopupConfig}}
 								<textarea dir="auto" name="msg" maxlength="{{maxMessageLength}}" class="input-message autogrow-short" placeholder="{{_ 'Message'}}"></textarea>
 							</div>
-
-							{{#if canRecordAudio}}
-								<div class="mic">
-									<i class="icon-mic" aria-label="{{_ "Record"}}"></i>
-								</div>
-								<div class="stop-mic hidden">
-									<i class="icon-stop" aria-label="{{_ "Stop_Recording"}}"></i>
-								</div>
-							{{/if}}
 						</div>
 						<div class="users-typing">
 							{{#with usersTyping}}
@@ -140,14 +127,7 @@
 							<div class="editing-commands-save">{{_ 'Enter_to'}} <a href="">{{_ 'Save_changes'}}</a></div>
 						</div>
 					</form>
-				{{else}}
-					{{#if canJoin}}
-					<div>
-						{{{_ "you_are_in_preview_mode_of" room_name=roomName}}}
-						<button class="button join"><span><i class="icon-login"></i> {{_ "join"}}</span></button>
-					</div>
-					{{/if}}
-				{{/if}}
+
 			</footer>
 		</section>
 		<section class="flex-tab">

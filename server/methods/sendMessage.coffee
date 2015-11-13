@@ -10,12 +10,7 @@ Meteor.methods
 
 		user = RocketChat.models.Users.findOneById Meteor.userId(), fields: username: 1
 
-		room = Meteor.call 'canAccessRoom', message.rid, user._id
-
-		if not room
-			return false
-
-		RocketChat.sendMessage user, message, room, options
+		RocketChat.sendMessage user, message, options
 
 # Limit a user to sending 5 msgs/second
 DDPRateLimiter.addRule

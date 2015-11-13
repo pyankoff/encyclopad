@@ -2,10 +2,10 @@ RocketChat.models.Messages = new class extends RocketChat.models._Base
 	constructor: ->
 		@_initModel 'message'
 
-		@tryEnsureIndex { 'rid': 1, 'ts': 1 }
+		@tryEnsureIndex { 'ts': 1 }
 		@tryEnsureIndex { 'editedAt': 1 }, { sparse: 1 }
 		@tryEnsureIndex { 'editedBy._id': 1 }, { sparse: 1 }
-		@tryEnsureIndex { 'rid': 1, 't': 1, 'u._id': 1 }
+		@tryEnsureIndex { 't': 1, 'u._id': 1 }
 		@tryEnsureIndex { 'expireAt': 1 }, { expireAfterSeconds: 0 }
 		@tryEnsureIndex { 'msg': 'text' }
 
@@ -24,11 +24,11 @@ RocketChat.models.Messages = new class extends RocketChat.models._Base
 
 		return @find query, options
 
-	findVisibleByRoomId: (roomId, options) ->
+	findVisibleByRecipe: (recipe, options) ->
 		query =
 			_hidden:
 				$ne: true
-			rid: roomId
+			tags: recipe
 
 		return @find query, options
 
@@ -39,31 +39,31 @@ RocketChat.models.Messages = new class extends RocketChat.models._Base
 
 		return @find query, options
 
-	findVisibleByRoomIdAfterTimestamp: (roomId, timestamp, options) ->
+	findVisibleByRecipeAfterTimestamp: (recipe, timestamp, options) ->
 		query =
 			_hidden:
 				$ne: true
-			rid: roomId
+			tags: recipe
 			ts:
 				$gt: timestamp
 
 		return @find query, options
 
-	findVisibleByRoomIdBeforeTimestamp: (roomId, timestamp, options) ->
+	findVisibleByRecipeBeforeTimestamp: (recipe, timestamp, options) ->
 		query =
 			_hidden:
 				$ne: true
-			rid: roomId
+			tags: recipe
 			ts:
 				$lt: timestamp
 
 		return @find query, options
 
-	findVisibleByRoomIdBetweenTimestamps: (roomId, afterTimestamp, beforeTimestamp, options) ->
+	findVisibleByRecipeBetweenTimestamps: (recipe, afterTimestamp, beforeTimestamp, options) ->
 		query =
 			_hidden:
 				$ne: true
-			rid: roomId
+			tags: recipe
 			ts:
 				$gt: afterTimestamp
 				$lt: beforeTimestamp
@@ -253,12 +253,6 @@ RocketChat.models.Messages = new class extends RocketChat.models._Base
 	removeById: (_id) ->
 		query =
 			_id: _id
-
-		return @remove query
-
-	removeByRoomId: (roomId) ->
-		query =
-			rid: roomId
 
 		return @remove query
 

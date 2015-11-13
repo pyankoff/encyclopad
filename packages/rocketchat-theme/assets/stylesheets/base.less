@@ -541,6 +541,7 @@ label.required:after {
 }
 
 .toggle-favorite {
+	font-size: 22px;
 }
 
 .loading {
@@ -1560,8 +1561,8 @@ a.github-fork {
 		}
 	}
 	h2 {
+		margin-right: 5px;
 		max-width: 90%;
-		overflow: hidden;
 		white-space: nowrap;
 		text-overflow: ellipsis;
 		font-size: 22px;
@@ -1585,8 +1586,6 @@ a.github-fork {
 		.calc(width,
 		~'100% - 100px');
 		vertical-align: top;
-		margin-top: -4px;
-		margin-left: -3px;
 		font-size: 20px;
 	}
 	.icon-pencil {
@@ -1680,7 +1679,6 @@ a.github-fork {
 	right: 0;
 	width: auto;
 	height: auto;
-	margin-right: 40px;
 	.transition(width .25s cubic-bezier(.5, 0, .1, 1));
 	&.flex-opened {
 		right: @flex-tab-width;
