@@ -95,8 +95,7 @@ class @ChatMessages
 
 			msg = input.value
 			input.value = ''
-			tags = recipe.split(' ')
-			msgObject = { _id: Random.id(), tags: tags, msg: msg}
+			msgObject = { _id: Random.id(), tags: recipe, msg: msg}
 			#Check if message starts with /command
 			if msg[0] is '/'
 				match = msg.match(/^\/([^\s]+)(?:\s+(.*))?$/m)

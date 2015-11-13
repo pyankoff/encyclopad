@@ -9,14 +9,8 @@ msgStream.permissions.read (eventName) ->
 	console.log('stream.permissions.read', this.userId, eventName);
 	# return this.userId == eventName;
 
-	try
-		canAccess = Meteor.call 'canAccessRoom', eventName, this.userId
+	return true
 
-		return false if not canAccess
-
-		return true
-	catch e
-		return false
 
 
 Meteor.startup ->
@@ -27,7 +21,7 @@ Meteor.startup ->
 
 	RocketChat.models.Messages.findVisibleCreatedOrEditedAfterTimestamp(new Date(), options).observe
 		added: (record) ->
-			msgStream.emit record.rid, record
+			msgStream.emit record.tags, record
 
 		changed: (record) ->
-			msgStream.emit record.rid, record
+			msgStream.emit record.tags, record

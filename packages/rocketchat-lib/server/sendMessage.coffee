@@ -19,10 +19,20 @@ RocketChat.sendMessage = (user, message, options) ->
 		message._id = RocketChat.models.Messages.insert message
 
 	###
+	Defer other updates as their return is not interesting to the user
+	###
+
+	###
 	Execute all callbacks
 	###
 	Meteor.defer ->
 
 		RocketChat.callbacks.run 'afterSaveMessage', message
+
+	###
+	Update all the room activity tracker fields
+	###
+	Meteor.defer ->
+		RocketChat.models.Rooms.incUnreadAndSetLastMessageTimestampById message.tags, 1, message.ts
 
 	return message

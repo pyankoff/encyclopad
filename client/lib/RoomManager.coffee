@@ -13,7 +13,7 @@ Tracker.autorun ->
 	if connected is true and connectionWasOnline is false and RoomManager.openedRooms?
 		for key, value of RoomManager.openedRooms
 			if value.rid?
-				loadMissedMessages(value.rid)
+				loadMissedMessages(Session.get('recipe'))
 
 	connectionWasOnline = connected
 
@@ -88,23 +88,20 @@ RocketChat.Notifications.onUser 'message', (msg) ->
 					name = typeName.substr(1)
 
 					query =
-						t: type
-
-					if type in ['c', 'p']
-						query.name = name
-					else if type is 'd'
-						query.usernames = $all: [Meteor.user()?.username, name]
+						name: name
 
 					room = ChatRoom.findOne query, { reactive: false }
 
 					if room?
-						openedRooms[typeName].rid = room._id
+						openedRooms[typeName].name = room.name
 
 						RoomHistoryManager.getMoreIfIsEmpty Session.get('recipe')
 						record.ready = RoomHistoryManager.isLoading(Session.get('recipe')) is false
 						Dep.changed()
 
-						msgStream.on openedRooms[typeName].rid, (msg) ->
+
+
+						msgStream.on openedRooms[typeName].name, (msg) ->
 							ChatMessage.upsert { _id: msg._id }, msg
 
 							Meteor.defer ->

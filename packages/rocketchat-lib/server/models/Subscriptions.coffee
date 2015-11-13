@@ -11,9 +11,9 @@ RocketChat.models.Subscriptions = new class extends RocketChat.models._Base
 
 
 	# FIND ONE
-	findOneByRoomIdAndUserId: (roomId, userId) ->
+	findOneByRoomIdAndUserId: (recipe, userId) ->
 		query =
-			rid: roomId
+			name: recipe
 			"u._id": userId
 
 		return @findOne query
@@ -27,9 +27,9 @@ RocketChat.models.Subscriptions = new class extends RocketChat.models._Base
 
 
 	# UPDATE
-	archiveByRoomIdAndUserId: (roomId, userId) ->
+	archiveByRoomIdAndUserId: (recipe, userId) ->
 		query =
-			rid: roomId
+			name: recipe
 			'u._id': userId
 
 		update =
@@ -40,9 +40,9 @@ RocketChat.models.Subscriptions = new class extends RocketChat.models._Base
 
 		return @update query, update
 
-	unarchiveByRoomIdAndUserId: (roomId, userId) ->
+	unarchiveByRoomIdAndUserId: (recipe, userId) ->
 		query =
-			rid: roomId
+			name: recipe
 			'u._id': userId
 
 		update =
@@ -53,9 +53,9 @@ RocketChat.models.Subscriptions = new class extends RocketChat.models._Base
 
 		return @update query, update
 
-	hideByRoomIdAndUserId: (roomId, userId) ->
+	hideByRoomIdAndUserId: (recipe, userId) ->
 		query =
-			rid: roomId
+			name: recipe
 			'u._id': userId
 
 		update =
@@ -65,9 +65,9 @@ RocketChat.models.Subscriptions = new class extends RocketChat.models._Base
 
 		return @update query, update
 
-	openByRoomIdAndUserId: (roomId, userId) ->
+	openByRoomIdAndUserId: (recipe, userId) ->
 		query =
-			rid: roomId
+			name: recipe
 			'u._id': userId
 
 		update =
@@ -133,9 +133,10 @@ RocketChat.models.Subscriptions = new class extends RocketChat.models._Base
 
 		return @update query, update, { multi: true }
 
-	incUnreadOfDirectForRoomIdExcludingUserId: (roomId, userId, inc=1) ->
+	incUnreadOfDirectForRoomIdExcludingUserId: (recipe, userId, inc=1) ->
+		console.log recipe
 		query =
-			rid: roomId
+			name: recipe
 			t: 'd'
 			'u._id':
 				$ne: userId
@@ -149,9 +150,9 @@ RocketChat.models.Subscriptions = new class extends RocketChat.models._Base
 
 		return @update query, update, { multi: true }
 
-	incUnreadForRoomIdExcludingUserId: (roomId, userId, inc=1) ->
+	incUnreadForRoomIdExcludingUserId: (recipe, userId, inc=1) ->
 		query =
-			rid: roomId
+			name: recipe
 			'u._id':
 				$ne: userId
 
@@ -164,9 +165,9 @@ RocketChat.models.Subscriptions = new class extends RocketChat.models._Base
 
 		return @update query, update, { multi: true }
 
-	incUnreadForRoomIdAndUserIds: (roomId, userIds, inc=1) ->
+	incUnreadForRoomIdAndUserIds: (recipe, userIds, inc=1) ->
 		query =
-			rid: roomId
+			name: recipe
 			'u._id':
 				$in: userIds
 
@@ -179,9 +180,9 @@ RocketChat.models.Subscriptions = new class extends RocketChat.models._Base
 
 		return @update query, update, { multi: true }
 
-	setAlertForRoomIdExcludingUserId: (roomId, userId, alert=true) ->
+	setAlertForRoomIdExcludingUserId: (recipe, userId, alert=true) ->
 		query =
-			rid: roomId
+			rid: recipe
 			alert:
 				$ne: alert
 			'u._id':

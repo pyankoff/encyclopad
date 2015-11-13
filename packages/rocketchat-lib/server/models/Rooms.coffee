@@ -246,9 +246,9 @@ RocketChat.models.Rooms = new class extends RocketChat.models._Base
 
 		return @update query, update
 
-	incUnreadAndSetLastMessageTimestampById: (_id, inc=1, lastMessageTimestamp) ->
+	incUnreadAndSetLastMessageTimestampById: (recipe, inc=1, lastMessageTimestamp) ->
 		query =
-			_id: _id
+			name: recipe
 
 		update =
 			$set:
