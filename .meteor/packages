@@ -3,6 +3,7 @@
 # 'meteor add' and 'meteor remove' will edit this file for you,
 # but you can also edit it by hand.
 
+rocketchat:cors
 accounts-facebook
 accounts-github
 accounts-google
@@ -24,6 +25,7 @@ meteor-base
 mobile-experience
 mongo
 random
+rate-limit
 reactive-dict
 reactive-var
 reload
@@ -68,6 +70,7 @@ mrt:reactive-store
 mystor:device-detection
 nimble:restivus
 nooitaf:colors
+ostrio:cookies@2.0.1
 pauli:accounts-linkedin
 perak:codemirror
 percolate:migrations

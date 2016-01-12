@@ -6,7 +6,13 @@ Meteor.methods
 		unless RocketChat.authz.hasPermission(Meteor.userId(), 'create-p')
 			throw new Meteor.Error 'not-authorized', '[methods] createPrivateGroup -> Not authorized'
 
-		console.log '[methods] createPrivateGroup -> '.green, 'userId:', Meteor.userId(), 'arguments:', arguments
+		try
+			nameValidation = new RegExp '^' + RocketChat.settings.get('UTF8_Names_Validation') + '$'
+		catch
+			nameValidation = new RegExp '^[0-9a-zA-Z-_.]+$'
+
+		if not nameValidation.test name
+			throw new Meteor.Error 'name-invalid'
 
 		if not /^[0-9a-z-_]+$/.test name
 			throw new Meteor.Error 'name-invalid'
@@ -17,7 +23,14 @@ Meteor.methods
 
 		members.push me.username
 
-		name = s.slugify name
+		# name = s.slugify name
+
+		# avoid duplicate names
+		if RocketChat.models.Rooms.findOneByName name
+			if RocketChat.models.Rooms.findOneByName(name).archived
+				throw new Meteor.Error 'archived-duplicate-name'
+			else
+				throw new Meteor.Error 'duplicate-name'
 
 		# avoid duplicate names
 		if RocketChat.models.Rooms.findOneByName name
@@ -28,7 +41,7 @@ Meteor.methods
 			ts: now
 
 		# set creator as group moderator.  permission limited to group by scoping to rid
-		RocketChat.authz.addUsersToRoles(Meteor.userId(), 'moderator', room._id)
+		RocketChat.authz.addUserRoles(Meteor.userId(), 'moderator', room._id)
 
 		for username in members
 			member = RocketChat.models.Users.findOneByUsername(username, { fields: { username: 1 }})
